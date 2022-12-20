@@ -34,7 +34,7 @@ contents="$(jq '.app_state.gov.deposit_params.min_deposit[0].amount = "10"' $HOM
 contents="$(jq '.app_state.gov.deposit_params.max_deposit_period = "20s"' $HOME/.starsd/config/genesis.json)" && echo "${contents}" >  $HOME/.starsd/config/genesis.json
 
 starsd add-genesis-account $VALIDATOR 10000000000000000stake
-starsd add-genesis-account $CREATOR 10000000000000000stake
+starsd add-genesis-account $CREATOR 10000000000000000stake,10000000000000000token
 starsd add-genesis-account $INVESTOR 10000000000000000stake
 starsd add-genesis-account $FUNDER 10000000000000000stake
 starsd gentx validator 10000000000stake --chain-id localnet-1 --keyring-backend test

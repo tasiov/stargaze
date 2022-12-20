@@ -117,6 +117,10 @@ import (
 	cronmoduletypes "github.com/public-awesome/stargaze/v9/x/cron/types"
 
 	//  ica
+	"github.com/CosmWasm/token-factory/x/tokenfactory"
+	"github.com/CosmWasm/token-factory/x/tokenfactory/bindings"
+	tokenfactorykeeper "github.com/CosmWasm/token-factory/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/CosmWasm/token-factory/x/tokenfactory/types"
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
 	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
@@ -208,6 +212,7 @@ var (
 		cronmodule.AppModuleBasic{},
 		wasm.AppModuleBasic{},
 		ica.AppModuleBasic{},
+		tokenfactory.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -224,6 +229,7 @@ var (
 		allocmoduletypes.FairburnPoolName: nil,
 		wasm.ModuleName:                   {authtypes.Burner},
 		icatypes.ModuleName:               nil,
+		tokenfactorytypes.ModuleName:      {authtypes.Minter, authtypes.Burner},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
@@ -261,7 +267,7 @@ type App struct {
 
 	// keepers
 	AccountKeeper    authkeeper.AccountKeeper
-	BankKeeper       bankkeeper.Keeper
+	BankKeeper       bankkeeper.BaseKeeper
 	CapabilityKeeper *capabilitykeeper.Keeper
 	StakingKeeper    stakingkeeper.Keeper
 	SlashingKeeper   slashingkeeper.Keeper
@@ -293,6 +299,8 @@ type App struct {
 	AllocKeeper allocmodulekeeper.Keeper
 	CronKeeper  cronmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
+
+	TokenFactoryKeeper tokenfactorykeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -333,6 +341,7 @@ func NewStargazeApp(
 		wasm.StoreKey,
 		cronmoduletypes.StoreKey,
 		icahosttypes.StoreKey,
+		tokenfactorytypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -501,16 +510,26 @@ func NewStargazeApp(
 	registry.RegisterEncoder(claimmoduletypes.ModuleName, claimwasm.Encoder)
 	registry.RegisterEncoder(allocmoduletypes.ModuleName, allocwasm.Encoder)
 
-
+	app.TokenFactoryKeeper = tokenfactorykeeper.NewKeeper(
+		keys[tokenfactorytypes.StoreKey],
+		app.GetSubspace(tokenfactorytypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.DistrKeeper,
+	)
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	availableCapabilities := "iterator,staking,stargate,stargaze,cosmwasm_1_1,cosmwasm_1_2"
+	availableCapabilities := "iterator,staking,stargate,stargaze,cosmwasm_1_1,cosmwasm_1_2, token_factory"
 
 	wasmOpts = append(
 		wasmOpts,
 		wasmkeeper.WithMessageEncoders(sgwasm.MessageEncoders(registry)),
 		wasmkeeper.WithQueryPlugins(nil),
+	)
+	wasmOpts = append(
+		wasmOpts,
+		bindings.RegisterCustomPlugins(&app.BankKeeper, &app.TokenFactoryKeeper)...,
 	)
 	app.WasmKeeper = wasm.NewKeeper(
 		appCodec,
@@ -606,6 +625,7 @@ func NewStargazeApp(
 		allocModule,
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		cronModule,
+		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -625,6 +645,7 @@ func NewStargazeApp(
 		paramstypes.ModuleName, vestingtypes.ModuleName,
 		wasm.ModuleName,
 		cronmoduletypes.ModuleName,
+		tokenfactorytypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -639,6 +660,7 @@ func NewStargazeApp(
 		allocmoduletypes.ModuleName, claimmoduletypes.ModuleName,
 		wasm.ModuleName,
 		cronmoduletypes.ModuleName,
+		tokenfactorytypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -891,6 +913,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(cronmoduletypes.ModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
+	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 
 	return paramsKeeper
