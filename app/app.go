@@ -691,6 +691,7 @@ func NewStargazeApp(
 		// wasm after ibc transfer
 		wasm.ModuleName,
 		cronmoduletypes.ModuleName,
+		tokenfactorytypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
