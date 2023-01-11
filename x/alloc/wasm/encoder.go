@@ -14,6 +14,10 @@ import (
 
 var _ sgwasm.Encoder = Encoder
 
+type AllocModuleMsg struct {
+	Alloc *AllocMsg `json:"alloc,omitempty"`
+}
+
 type AllocMsg struct {
 	FundFairburnPool *FundFairburnPool `json:"fund_fairburn_pool,omitempty"`
 }

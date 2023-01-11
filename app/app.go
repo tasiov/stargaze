@@ -101,7 +101,6 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/public-awesome/stargaze/v8/docs"
 	sgstatesync "github.com/public-awesome/stargaze/v8/internal/statesync"
-	sgwasm "github.com/public-awesome/stargaze/v8/internal/wasm"
 	allocmodule "github.com/public-awesome/stargaze/v8/x/alloc"
 	allocmodulekeeper "github.com/public-awesome/stargaze/v8/x/alloc/keeper"
 	allocmoduletypes "github.com/public-awesome/stargaze/v8/x/alloc/types"
@@ -486,10 +485,10 @@ func NewStargazeApp(
 	}
 
 	// custom messages
-	registry := sgwasm.NewEncoderRegistry()
-	registry.RegisterEncoder(sgwasm.DistributionRoute, sgwasm.CustomDistributionEncoder)
-	registry.RegisterEncoder(claimmoduletypes.ModuleName, claimwasm.Encoder)
-	registry.RegisterEncoder(allocmoduletypes.ModuleName, allocwasm.Encoder)
+	// registry := sgwasm.NewEncoderRegistry()
+	// registry.RegisterEncoder(sgwasm.DistributionRoute, sgwasm.CustomDistributionEncoder)
+	// registry.RegisterEncoder(claimmoduletypes.ModuleName, claimwasm.Encoder)
+	// registry.RegisterEncoder(allocmoduletypes.ModuleName, allocwasm.Encoder)
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
@@ -497,7 +496,10 @@ func NewStargazeApp(
 
 	wasmOpts = append(
 		wasmOpts,
-		wasmkeeper.WithMessageEncoders(sgwasm.MessageEncoders(registry)),
+		//wasmkeeper.WithMessageEncoders(sgwasm.MessageEncoders(registry)),
+		//wasmkeeper.WithMessageHandlerDecorator(sgwasm.CustomMessageDecorators(&app.AllocKeeper, &app.ClaimKeeper)),
+		wasmkeeper.WithMessageHandlerDecorator(allocwasm.CustomMessageDecorators(&app.AllocKeeper)),
+		wasmkeeper.WithMessageHandlerDecorator(claimwasm.CustomMessageDecorators(&app.ClaimKeeper)),
 		wasmkeeper.WithQueryPlugins(nil),
 	)
 	app.WasmKeeper = wasm.NewKeeper(

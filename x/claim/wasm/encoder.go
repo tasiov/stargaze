@@ -12,6 +12,10 @@ import (
 
 var _ sgwasm.Encoder = Encoder
 
+type ClaimModuleMsg struct {
+	Claim *ClaimMsg `json:"claim,omitempty"`
+}
+
 type ClaimAction string
 
 const (
