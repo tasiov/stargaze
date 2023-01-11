@@ -118,7 +118,6 @@ import (
 
 	//  ica
 	"github.com/CosmWasm/token-factory/x/tokenfactory"
-	"github.com/CosmWasm/token-factory/x/tokenfactory/bindings"
 	tokenfactorykeeper "github.com/CosmWasm/token-factory/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/CosmWasm/token-factory/x/tokenfactory/types"
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
@@ -509,6 +508,7 @@ func NewStargazeApp(
 	registry.RegisterEncoder(sgwasm.DistributionRoute, sgwasm.CustomDistributionEncoder)
 	registry.RegisterEncoder(claimmoduletypes.ModuleName, claimwasm.Encoder)
 	registry.RegisterEncoder(allocmoduletypes.ModuleName, allocwasm.Encoder)
+	registry.RegisterEncoder(sgwasm.TokenFactoryRoute, sgwasm.CustomTokenFactoryEncoder)
 
 	app.TokenFactoryKeeper = tokenfactorykeeper.NewKeeper(
 		keys[tokenfactorytypes.StoreKey],
@@ -529,7 +529,7 @@ func NewStargazeApp(
 	)
 	wasmOpts = append(
 		wasmOpts,
-		bindings.RegisterCustomPlugins(&app.BankKeeper, &app.TokenFactoryKeeper)...,
+		sgwasm.RegisterCustomPlugins(&app.BankKeeper, &app.TokenFactoryKeeper)...,
 	)
 	app.WasmKeeper = wasm.NewKeeper(
 		appCodec,
