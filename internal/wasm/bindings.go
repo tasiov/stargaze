@@ -5,24 +5,21 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	allocKeeper "github.com/public-awesome/stargaze/v8/x/alloc/keeper"
-	claimKeeper "github.com/public-awesome/stargaze/v8/x/claim/keeper"
+	distributionKeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 )
 
-func CustomMessageDecorators(allocKeeper *allocKeeper.Keeper, claimKeeper *claimKeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
+func CustomMessageDecorators(distrKeeper *distributionKeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
 	return func(old wasmkeeper.Messenger) wasmkeeper.Messenger {
 		return &CustomMessenger{
 			wrapped:     old,
-			allocKeeper: allocKeeper,
-			claimKeeper: claimKeeper,
+			distrKeeper: distrKeeper,
 		}
 	}
 }
 
 type CustomMessenger struct {
 	wrapped     wasmkeeper.Messenger
-	allocKeeper *allocKeeper.Keeper
-	claimKeeper *claimKeeper.Keeper
+	distrKeeper *distributionKeeper.Keeper
 }
 
 var _ wasmkeeper.Messenger = (*CustomMessenger)(nil)
