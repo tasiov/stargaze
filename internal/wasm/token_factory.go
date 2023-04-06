@@ -63,6 +63,9 @@ func CustomTokenFactoryEncoder(contract sdk.AccAddress, data json.RawMessage, ve
 	if tokenMsg.SetMetadata != nil {
 		return EncodeSetMetadata(contract, msg.Token.SetMetadata)
 	}
+	if tokenMsg.ForceTransfer != nil {
+		return EncodeForceTransfer(contract, msg.Token.ForceTransfer)
+	}
 
 	return nil, fmt.Errorf("wasm: invalid custom token factory message")
 }
@@ -72,7 +75,8 @@ func EncodeCreateToken(contract sdk.AccAddress, createDenom *bindingstypes.Creat
 	msgs := []sdk.Msg{createDenomMsg}
 
 	if createDenom.Metadata != nil {
-		panic("unimplemented")
+		setMetadataMsg := tokenfactorytypes.NewMsgSetDenomMetadata(contract.String(), transformMetadata(*createDenom.Metadata))
+		msgs = append(msgs, setMetadataMsg)
 	}
 	return msgs, nil
 }
@@ -99,7 +103,14 @@ func EncodeChangeAdmin(contract sdk.AccAddress, changeAdmin *bindingstypes.Chang
 }
 
 func EncodeSetMetadata(contract sdk.AccAddress, setMetadata *bindingstypes.SetMetadata) ([]sdk.Msg, error) {
-	panic("unimplemented")
+	setMetadataMsg := tokenfactorytypes.NewMsgSetDenomMetadata(contract.String(), transformMetadata(setMetadata.Metadata))
+	return []sdk.Msg{setMetadataMsg}, nil
+}
+
+func EncodeForceTransfer(contract sdk.AccAddress, forceTransfer *bindingstypes.ForceTransfer) ([]sdk.Msg, error) {
+	amount := sdk.NewCoin(forceTransfer.Denom, forceTransfer.Amount)
+	forceTransferMsg := tokenfactorytypes.NewMsgForceTransfer(contract.String(), amount, forceTransfer.FromAddress, forceTransfer.ToAddress)
+	return []sdk.Msg{forceTransferMsg}, nil
 }
 
 func EncodeBurnTokens(contract sdk.AccAddress, burnTokens *bindingstypes.BurnTokens) ([]sdk.Msg, error) {
@@ -119,4 +130,23 @@ func parseAddress(addr string) (sdk.AccAddress, error) {
 		return nil, sdkerrors.Wrap(err, "verify address format")
 	}
 	return parsed, nil
+}
+
+func transformMetadata(metadata bindingstypes.Metadata) banktypes.Metadata {
+	denomUnits := make([]*banktypes.DenomUnit, len(metadata.DenomUnits))
+	for _, denomUnit := range metadata.DenomUnits {
+		denomUnits = append(denomUnits, &banktypes.DenomUnit{
+			Denom:    denomUnit.Denom,
+			Exponent: denomUnit.Exponent,
+			Aliases:  denomUnit.Aliases,
+		})
+	}
+	return banktypes.Metadata{
+		Description: metadata.Description,
+		DenomUnits:  denomUnits,
+		Base:        metadata.Base,
+		Display:     metadata.Display,
+		Name:        metadata.Name,
+		Symbol:      metadata.Symbol,
+	}
 }
