@@ -1,4 +1,4 @@
-module github.com/public-awesome/stargaze/v9
+module github.com/tasiov/stargaze/v9
 
 go 1.20
 
@@ -14,6 +14,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/pkg/errors v0.9.1
+	github.com/public-awesome/stargaze/v9 v9.1.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.2
@@ -147,7 +148,7 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
-	github.com/CosmWasm/wasmd => github.com/public-awesome/wasmd v0.30.1-stargaze
+	github.com/CosmWasm/wasmd => ../wasmd
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/spm => github.com/public-awesome/spm v0.1.9-stargaze.0.20230316175139-f88eba8c8416
